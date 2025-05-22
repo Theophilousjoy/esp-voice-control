@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Voice Control ESP8266</title>
+</head>
+<body>
+  <h1>ESP8266 Voice Control</h1>
+  <button onclick="startListening()">Give Voice Command</button>
+  <p id="status">Waiting for command...</p>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function startListening() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.start();
+
+      recognition.onresult = function(event) {
+        const command = event.results[0][0].transcript.toLowerCase();
+        document.getElementById("status").innerText = "Heard: " + command;
+
+        if (command.includes("on")) {
+          db.ref("esp8266/led").set("ON");
+        } else if (command.includes("off")) {
+          db.ref("esp8266/led").set("OFF");
+        } else {
+          document.getElementById("status").innerText = "Unknown command: " + command;
+        }
+      };
+
+      recognition.onerror = function(event) {
+        document.getElementById("status").innerText = "Error: " + event.error;
+      };
+    }
+  </script>
+</body>
+</html>
